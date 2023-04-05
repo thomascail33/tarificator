@@ -8,6 +8,8 @@ Created on Tue Dec 13 13:43:25 2022
 """
 import time
 import os
+import re
+import string
 import subprocess
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -216,21 +218,33 @@ def create_work_file(fabdis_file, columns_supr, four_name, destfile, log_file, t
     df_commerce = dfs["01_COMMERCE"]
     df_commerce = df_commerce.loc[:, columns_gard]
     df_commerce = df_commerce.loc[~df_commerce['STA'].str.startswith('S')]
-
+    df_commerce["FAM1"] = pd.to_numeric(df_commerce["FAM1"], errors="coerce")
+    df_commerce["REFCIALE"] = df_commerce["REFCIALE"].astype(str)
+    df_commerce["REFCIALE"] = df_commerce["REFCIALE"].str.zfill(6)
+    df_commerce["REFARTICLE"] = df_commerce["REFARTICLE"].astype(str)
+    df_commerce["REFARTICLE"] = df_commerce["REFARTICLE"].str.zfill(6)
+    df_commerce["FAM1"] = df_commerce["FAM1"].apply(lambda x: '{:03d}'.format(x) if not pd.isna(x) else '')
+    if four_name == "ATLANTIC CLIMATISATION & VENTILATION":
+        df_commerce = df_commerce.loc[~df_commerce['MKT1'].str.startswith('CV4')]
+    
     workbook = openpyxl.load_workbook(destfile)
     new_sheet = workbook.create_sheet("01_COMMERCE")
     for r in dataframe_to_rows(df_commerce, index=False, header=True):
         new_sheet.append(r)
-
+        
     workbook.save(destfile)
-
-    format_work_file(destfile, columns_supr, log_file, fichier_skusocoda, trigramme, four_name, start_time, fabdis_file)
+    
+    max_row, max_col = df_commerce.shape
+    max_col_letters = string.ascii_uppercase[max_col-1]
+    rep  = str(max_col_letters) + ":"+ str(max_row) 
+    rep = "A:" + remove_numbers(rep)
+    format_work_file(destfile, columns_supr, log_file, fichier_skusocoda, trigramme, four_name, start_time, fabdis_file, rep)
 
 # Suppression des colonnes inutile puis insertion des colonnes
 # PHOTO, FICHE, SKUSOCODA
 # Copie du SKUSOCODA dans l'onglet SKUSOCODA
 # Copie de tout l'onglet MEDIA
-def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigramme, four_name, start_time, fabdis_file):
+def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigramme, four_name, start_time, fabdis_file, rep):
     SKUSOCODA = False
     nom = 'NOM'
     #-------------------------------------------TRAVAUX-------------------------------------
@@ -240,6 +254,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     df_deee = dfs["04_REGLEMENTAIRE"]
     df_deee = df_deee[df_deee["RTYP"] == 'CONTRIB']
     df_deee = df_deee.loc[:, columns_gard_deee]
+    df_deee["REFCIALE"] = df_deee["REFCIALE"].astype(str)
+    df_deee["REFCIALE"] = df_deee["REFCIALE"].str.zfill(6)
     try:
         df_deee.loc[~df_deee['RCOD'].str.startswith('P')]
     except Exception :
@@ -251,8 +267,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     new_sheet = workbook.create_sheet("DEEE")
     for r in dataframe_to_rows(df_deee, index=False, header=True):
         new_sheet.append(r)
-
     workbook.save(destfile)
+    
     #-------------------------------------------TRAVAUX-------------------------------------
     print("Etape 7 ")
     photohd = 'PHOTOHD'
@@ -261,12 +277,13 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     df_media = df_media[df_media["TYPM"] == photohd]
     df_media = df_media.loc[:, columns_gard_media]
     df_media = df_media[df_media["NUM"] == 1]
+    df_media["REFCIALE"] = df_media["REFCIALE"].astype(str)
+    df_media["REFCIALE"] = df_media["REFCIALE"].str.zfill(6)
 
     workbook = openpyxl.load_workbook(destfile)
     new_sheet = workbook.create_sheet("03_MEDIA")
     for r in dataframe_to_rows(df_media, index=False, header=True):
         new_sheet.append(r)
-
     workbook.save(destfile)
 
     #-------------------------------------------TRAVAUX-------------------------------------
@@ -276,6 +293,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     df_fgaz = df_fgaz[df_fgaz["RTYP"] == "F-GAZ"]
     df_fgaz = df_fgaz[df_fgaz["RTEXTE"] == "SOUMIS ADC"]
     df_fgaz = df_fgaz.loc[:, columns_gard_fgaz]
+    df_fgaz["REFCIALE"] = df_fgaz["REFCIALE"].astype(str)
+    df_fgaz["REFCIALE"] = df_fgaz["REFCIALE"].str.zfill(6)
 
     workbook = openpyxl.load_workbook(destfile)
     new_sheet = workbook.create_sheet("F-GAZ")
@@ -296,9 +315,9 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     col_fiche = 4
     sheet3.cell(row = 1, column = col_fiche, value="FICHE")
     ext2 = '.pdf'
-    column6 = recuperer_ltre(nom, sheet3['A:AG'])
-    column7 = recuperer_ltre('REFCIALE', sheet3['A:AG'])
-    column8 = recuperer_ltre('FICHE', sheet3['A:AG'])
+    column6 = recuperer_ltre(nom, sheet3['A:T'])
+    column7 = recuperer_ltre('REFCIALE', sheet3['A:T'])
+    column8 = recuperer_ltre('FICHE', sheet3['A:T'])
     for row in sheet3[column6]:
         tracer = row.row
         if row.value != nom:
@@ -313,8 +332,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
 
     print("Etape 9")
 
-    column9 = recuperer_ltre('LIBELLE240', sheet['A:AG'])
-    column10 = recuperer_ltre('LIBELLE30', sheet['A:AG'])
+    column9 = recuperer_ltre('LIBELLE240', sheet[rep])
+    column10 = recuperer_ltre('LIBELLE30', sheet[rep])
     for row in sheet[column9]:
         rowname = str(row.value)
         rowname = rowname.replace("œ","oe")
@@ -327,11 +346,12 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     print("----------------------------------------------------------")
     print("Insertion des colonnes 'PHOTO', 'FICHE', D3E et 'SKUSOCODA' ...")
     print("----------------------------------------------------------")
-
-    sheet.insert_cols(idx = sheet.max_column+1, amount=12)
-    col_uch = sheet.max_column+1
     
-    sheet.cell(row = 1, column = col_uch, value="SOCODA")
+    
+    sheet.insert_cols(idx = sheet.max_column+1, amount=11)
+    
+    col_socoda = sheet.max_column+1
+    sheet.cell(row = 1, column = col_socoda, value="SOCODA")
     col_uch = sheet.max_column+1
     sheet.cell(row = 1, column = col_uch, value="UCH")
     col_fgaz = sheet.max_column+1
@@ -355,7 +375,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
 
     log_file.write("Les colonnes suivantes ont été inséré : 'PHOTO', 'FICHE', D3E, UCH, D3EC, D3EV, D3EU et 'SKUSOCODA'  \n ")
 
-
+    
     print("Etape 11")
     column12 = recuperer_ltre('SOCODA', sheet['A:AZ'])
     column13 = recuperer_ltre('REFARTICLE', sheet['A:AZ'])
@@ -414,7 +434,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         rval = sheet2[ltr_rval+str(tracer)].value
         rval = str(rval).replace(",", ".")
         if deee == None:
-            if str(rcod).startswith("L"):
+            if str(rcod).startswith("L") and rval > 0.01:
                 if float(rval) == 0.13:
                     if int(rnbr) < 10 :
                         sheet2[ltr_deee+str(tracer)].value = "ECL0" + str(rnbr)
@@ -493,18 +513,22 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     print("Copie SKUSOCODA ...")
     print("----------------------------------------------------------")
 
-
-    dfs = pd.read_excel(fichier_skusocoda, sheet_name=None)
-
-    df_skusocoda = dfs['S1_SOCODA_NOMENCLATURE']
-    df_skusocoda = df_skusocoda.loc[:, ["REFCIALE", "SKUSOCODA"]]
-    SKUSOCODA = True
-    workbook = openpyxl.load_workbook(destfile)
-    new_sheet = workbook.create_sheet("SKUSOCODA")
-    for r in dataframe_to_rows(df_skusocoda, index=False, header=True):
-        new_sheet.append(r)
-
-    workbook.save(destfile)
+    try : 
+        pd.read_excel(fichier_skusocoda, sheet_name=None)
+    except Exception :
+        print("")
+    else:
+        dfs = pd.read_excel(fichier_skusocoda, sheet_name=None)
+        df_skusocoda = dfs['S1_SOCODA_NOMENCLATURE']
+        df_skusocoda = df_skusocoda.loc[:, ["REFCIALE", "SKUSOCODA"]]
+        df_skusocoda["REFCIALE"] = df_skusocoda["REFCIALE"].astype(str)
+        df_skusocoda["REFCIALE"] = df_skusocoda["REFCIALE"].str.zfill(6)
+        SKUSOCODA = True
+        workbook = openpyxl.load_workbook(destfile)
+        new_sheet = workbook.create_sheet("SKUSOCODA")
+        for r in dataframe_to_rows(df_skusocoda, index=False, header=True):
+            new_sheet.append(r)
+        workbook.save(destfile)
     
     
     camsoule(destfile, "RCOD", 'F-GAZ', destfile)
