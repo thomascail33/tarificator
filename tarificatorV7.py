@@ -432,7 +432,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         rcod = sheet2[ltr_rcod+str(tracer)].value
         rnbr = sheet2[ltr_rnbr+str(tracer)].value
         rval = sheet2[ltr_rval+str(tracer)].value
-        rval = str(rval).replace(",", ".")
+        rval = str(rval).replace(",", ".") 
         if deee == None:
             if str(rcod).startswith("L") and rval > 0.01:
                 if float(rval) == 0.13:

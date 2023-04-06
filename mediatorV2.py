@@ -74,6 +74,12 @@ def mediator(wb, four_name, trigramme):
     os.makedirs(fiche_folder, exist_ok=True)
     photoaprendre = ''
     status = False
+    error_df = pd.DataFrame(columns=["REFCIALE",'URL', 'TYPE'])
+    error_file = os.path.join(dossier_parent, "error.xlsx")
+    workbook = openpyxl.Workbook()
+    workbook.save(error_file)
+    
+    
     
     for row in sheet[colonne2]:
         if row.value == photobd:
@@ -102,7 +108,6 @@ def mediator(wb, four_name, trigramme):
                 status = True
                 break
      
-    print(trigramme)
     max_row = sheet.max_row
     printProgressBar(0, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
     
@@ -129,12 +134,14 @@ def mediator(wb, four_name, trigramme):
                             try:
                                 response = requests.get(url)
                             except Exception :
-                                print("L'url : " + str(url) + " est introuvable ! ")   
+                                error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'PHOTO'}, ignore_index=True)
                             else:   
                                 if response.status_code == 200:
                                     with open(filedestination, 'wb') as f:
                                         f.write(response.content)
                                         z = z +1
+                                else:
+                                    error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'PHOTO'}, ignore_index=True)
                         if url == None:
                             z = z +1
     
@@ -161,15 +168,21 @@ def mediator(wb, four_name, trigramme):
                             try:
                                 response = requests.get(url)
                             except Exception :
-                                print("L'url : " + str(url) + " est introuvable ! ")
+                                error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'FICHE'}, ignore_index=True)
                             else: 
                                 if response.status_code == 200:
                                     with open(filedestination, 'wb') as f:
                                         f.write(response.content)
                                         z = z +1
-                                
+                                else:
+                                    error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'FICHE'}, ignore_index=True)
                         if url == None:
                             z = z +1
+    if not error_df.empty:
+        error_df.to_excel(error_file, index=False)
+        print(f'Les erreurs ont été enregistrées dans {error_file}')
+    else:
+        print('Toutes les URLs ont été téléchargées avec succès !')
     end_time = time.perf_counter()
     execution_time = end_time - start_time
     print("----------------------------------------------------------")
