@@ -8,6 +8,7 @@ Created on Tue Feb 21 13:43:25 2023
 import requests
 import os
 import time
+from PIL import Image
 import pandas as pd
 import openpyxl
 from openpyxl import load_workbook
@@ -49,7 +50,35 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     # Print New Line on Complete
     if iteration == total:
         print()
-        
+
+def xnviewConversion(chemin_dossier):
+    file_list = os.listdir(chemin_dossier)
+    maxim = len(file_list)
+    tracer = 0
+    printProgressBar(0, maxim, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    for file in file_list:
+        tracer = tracer +1
+        printProgressBar(tracer, maxim, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        if file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".png"):
+            file_path = os.path.join(chemin_dossier, file)
+            # Ouvrir l'image
+            image = Image.open(file_path)
+
+            # Redimensionner l'image en 600x600 en conservant l'aspect ratio
+            new_size = (600, 600)
+            image.thumbnail(new_size)
+            
+            # Créer une nouvelle image de taille 600x600 avec un fond noir
+            new_image = Image.new("RGB", new_size, color="white")
+            
+            # Coller l'image redimensionnée au centre de la nouvelle image avec un fond noir
+            left = (new_size[0] - image.size[0]) // 2
+            top = (new_size[1] - image.size[1]) // 2
+            new_image.paste(image, (left, top))
+            
+            # Sauvegarder la nouvelle image
+            new_image.save(file_path)
+            
 def mediator(wb, four_name, trigramme):
     start_time = time.perf_counter()
     workbook = load_workbook(wb)
@@ -78,8 +107,6 @@ def mediator(wb, four_name, trigramme):
     error_file = os.path.join(dossier_parent, "error.xlsx")
     workbook = openpyxl.Workbook()
     workbook.save(error_file)
-    
-    
     
     for row in sheet[colonne2]:
         if row.value == photobd:
@@ -144,7 +171,7 @@ def mediator(wb, four_name, trigramme):
                                     error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'PHOTO'}, ignore_index=True)
                         if url == None:
                             z = z +1
-    
+    xnviewConversion(photo_folder)
     # FICHE  
     for row in sheet[colonne]:
         tracer = row.row
