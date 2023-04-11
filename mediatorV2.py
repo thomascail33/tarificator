@@ -79,7 +79,7 @@ def xnviewConversion(chemin_dossier):
             # Sauvegarder la nouvelle image
             new_image.save(file_path)
             
-def mediator(wb, four_name, trigramme):
+def mediator(wb, four_name, marq_name, trigramme):
     start_time = time.perf_counter()
     workbook = load_workbook(wb)
     sheet = workbook['03_MEDIA']
@@ -96,6 +96,7 @@ def mediator(wb, four_name, trigramme):
     colonne4 = recuperer_ltre('REFCIALE', sheet['A:Z'])
     colonne5 = recuperer_ltre('NOM', sheet['A:Z'])
     colonne6 = recuperer_ltre('TYPM', sheet['A:Z'])
+    colonne7 = recuperer_ltre('MARQUE', sheet['A:Z'])
     dossier_parent  = os.path.dirname(wb)
     photo_folder = os.path.join(dossier_parent , 'photo')
     fiche_folder = os.path.join(dossier_parent , 'fiche')
@@ -143,68 +144,70 @@ def mediator(wb, four_name, trigramme):
         tracer = row.row
         printProgressBar(tracer, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
         if row.value != 'URLT':
-            if sheet[colonne2 + str(tracer)].value == photoaprendre:
-                if str(sheet[colonne3 + str(tracer)].value) == '1':
-                    try:
-                        sheet[colonne5 + str(tracer)].value[-4:] != None
-                    except Exception :
-                        nt = 1
-                    ref = sheet[colonne4 + str(tracer)].value
-                    photo_new_name = trigramme +'_'+ str(ref) + ext
-                    photo_new_name = photo_new_name.replace("\\", "")
-                    photo_new_name = photo_new_name.replace("/", "")
-                    destfile = photo_folder
-                    filedestination = os.path.join(destfile, photo_new_name)
-                    url = row.value
-                    if not os.path.exists(filedestination):
-                        if url != None:
-                            try:
-                                response = requests.get(url)
-                            except Exception :
-                                error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'PHOTO'}, ignore_index=True)
-                            else:   
-                                if response.status_code == 200:
-                                    with open(filedestination, 'wb') as f:
-                                        f.write(response.content)
-                                        z = z +1
-                                else:
+            if sheet[colonne7 + str(tracer)].value == marq_name:
+                if sheet[colonne2 + str(tracer)].value == photoaprendre:
+                    if str(sheet[colonne3 + str(tracer)].value) == '1':
+                        try:
+                            sheet[colonne5 + str(tracer)].value[-4:] != None
+                        except Exception :
+                            nt = 1
+                        ref = sheet[colonne4 + str(tracer)].value
+                        photo_new_name = trigramme +'_'+ str(ref) + ext
+                        photo_new_name = photo_new_name.replace("\\", "")
+                        photo_new_name = photo_new_name.replace("/", "")
+                        destfile = photo_folder
+                        filedestination = os.path.join(destfile, photo_new_name)
+                        url = row.value
+                        if not os.path.exists(filedestination):
+                            if url != None:
+                                try:
+                                    response = requests.get(url)
+                                except Exception :
                                     error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'PHOTO'}, ignore_index=True)
-                        if url == None:
-                            z = z +1
+                                else:   
+                                    if response.status_code == 200:
+                                        with open(filedestination, 'wb') as f:
+                                            f.write(response.content)
+                                            z = z +1
+                                    else:
+                                        error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'PHOTO'}, ignore_index=True)
+                            if url == None:
+                                z = z +1
     xnviewConversion(photo_folder)
     # FICHE  
     for row in sheet[colonne]:
         tracer = row.row
         printProgressBar(tracer, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
         if row.value != 'URLT':
-            if sheet[colonne2 + str(tracer)].value == 'FICHE':
-                if str(sheet[colonne3 + str(tracer)].value) == '1':
-                    try:
-                        sheet[colonne5 + str(tracer)].value[-4:] != None
-                    except Exception :
-                        nt = 1
-                    ref = sheet[colonne4 + str(tracer)].value
-                    fiche_new_name = trigramme +'_'+ str(ref) + ext2
-                    fiche_new_name = fiche_new_name.replace("\\", "_")
-                    fiche_new_name = fiche_new_name.replace("/", "_")
-                    destfile = fiche_folder
-                    filedestination = os.path.join(destfile, fiche_new_name)
-                    url = row.value
-                    if not os.path.exists(filedestination):
-                        if url != None:
-                            try:
-                                response = requests.get(url)
-                            except Exception :
-                                error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'FICHE'}, ignore_index=True)
-                            else: 
-                                if response.status_code == 200:
-                                    with open(filedestination, 'wb') as f:
-                                        f.write(response.content)
-                                        z = z +1
-                                else:
+            if sheet[colonne7 + str(tracer)].value == marq_name:
+                if sheet[colonne2 + str(tracer)].value == 'FICHE':
+                    if str(sheet[colonne3 + str(tracer)].value) == '1':
+                        try:
+                            sheet[colonne5 + str(tracer)].value[-4:] != None
+                        except Exception :
+                            nt = 1
+                        ref = sheet[colonne4 + str(tracer)].value
+                        fiche_new_name = trigramme +'_'+ str(ref) + ext2
+                        fiche_new_name = fiche_new_name.replace("\\", "_")
+                        fiche_new_name = fiche_new_name.replace("/", "_")
+                        destfile = fiche_folder
+                        filedestination = os.path.join(destfile, fiche_new_name)
+                        url = row.value
+                        if not os.path.exists(filedestination):
+                            if url != None:
+                                try:
+                                    response = requests.get(url)
+                                except Exception :
                                     error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'FICHE'}, ignore_index=True)
-                        if url == None:
-                            z = z +1
+                                else: 
+                                    if response.status_code == 200:
+                                        with open(filedestination, 'wb') as f:
+                                            f.write(response.content)
+                                            z = z +1
+                                    else:
+                                        error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'FICHE'}, ignore_index=True)
+                            if url == None:
+                                z = z +1
     if not error_df.empty:
         error_df.to_excel(error_file, index=False)
         print(f'Les erreurs ont été enregistrées dans {error_file}')
@@ -271,7 +274,7 @@ def OnValidation():
         clear_button.config(state = "disabled")
         
         trigramme = get_trigram(fourn_name, marq_name).lower()
-        mediator(folder_path, fourn_name, trigramme)
+        mediator(folder_path, fourn_name, marq_name, trigramme)
          
 def quit_app():
     root.destroy()
