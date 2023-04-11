@@ -19,6 +19,7 @@ import openpyxl
 from openpyxl import load_workbook
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 
 columns_gard = ["MARQUE", "REFCIALE", "REFARTICLE", "GTIN13", "LIBELLE30", "LIBELLE80",
                     "TARIF", "TARIFD", "QMV" ,"QMC" ,"QT" ,"UB" ,
@@ -61,7 +62,18 @@ def get_trigram(fabricant, marque):
     else:
         return trigram[0]
 
-
+def get_compatible(fabricant, marque):
+    comp = df.loc[(df['FABRICANT'] == fabricant) & (df['MARQUE'] == marque), 'COMPATIBLE'].values
+    if len(comp) == 0:
+        return "Compatibilité non trouvé"
+    else:
+        return comp[0]
+    
+def show_error_popup(message):
+    root = tk.Tk()
+    root.withdraw()
+    messagebox.showerror("Error", message)
+    
 def keep_only_numbers(string):
   return ''.join(char for char in string if char.isdigit())
 
@@ -628,8 +640,11 @@ if __name__ == '__main__':
              output_folder = folder_path+"-2"
 
              trigramme = get_trigram(fourn_name, marq_name)
-
-             parse_folder(output_folder, columns_gard, fourn_name, tarif_date, trigramme, file_path, folder_path)
+             comp = get_compatible(fourn_name, marq_name)
+             if comp == "NON":
+                 show_error_popup("Ce tarif n'est pas compatible avec le logiciel !")
+             if comp == "OUI":
+                 parse_folder(output_folder, columns_gard, fourn_name, tarif_date, trigramme, file_path, folder_path)
              
     def new_tarif():
         folder_entry.delete(0, tk.END)
