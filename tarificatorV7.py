@@ -434,7 +434,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         rval = sheet2[ltr_rval+str(tracer)].value
         rval = str(rval).replace(",", ".") 
         if deee == None:
-            if str(rcod).startswith("L") and rval > 0.01:
+            if str(rcod).startswith("L") and float(rval) > 0.01:
                 if float(rval) == 0.13:
                     if int(rnbr) < 10 :
                         sheet2[ltr_deee+str(tracer)].value = "ECL0" + str(rnbr)
