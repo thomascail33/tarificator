@@ -98,8 +98,8 @@ def mediator(wb, four_name, marq_name, trigramme):
     colonne6 = recuperer_ltre('TYPM', sheet['A:Z'])
     colonne7 = recuperer_ltre('MARQUE', sheet['A:Z'])
     dossier_parent  = os.path.dirname(wb)
-    photo_folder = os.path.join(dossier_parent , 'Photo' + str(marq_name))
-    fiche_folder = os.path.join(dossier_parent , 'Fiche' + str(marq_name))
+    photo_folder = os.path.join(dossier_parent , 'Photo ' + str(marq_name))
+    fiche_folder = os.path.join(dossier_parent , 'Fiche ' + str(marq_name))
     os.makedirs(photo_folder, exist_ok=True)
     os.makedirs(fiche_folder, exist_ok=True)
     photoaprendre = ''
