@@ -105,7 +105,7 @@ def mediator(wb, four_name, marq_name, trigramme):
     photoaprendre = ''
     status = False
     error_df = pd.DataFrame(columns=["REFCIALE",'URL', 'TYPE'])
-    error_file = os.path.join(dossier_parent, "error.xlsx")
+    error_file = os.path.join(dossier_parent, "error_"+str(trigramme)+".xlsx")
     workbook = openpyxl.Workbook()
     workbook.save(error_file)
     
