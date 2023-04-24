@@ -185,9 +185,9 @@ def parse_folder(working_folder, columns_supr, four_name, tarif_date, trigramme,
     start_time = time.perf_counter()
     if origin_folder:
         if not os.path.exists(origin_folder):
+            show_error_popup("Le dossier d'origine n'existe pas. ")
             raise ValueError("Le dossier d'origine n'existe pas. ")
         if os.path.exists(working_folder):
-            #raise ValueError("Le dossier de sortie existe deja et ne peut pas etre ecrasé.")
             shutil.rmtree(working_folder)
         print("----------------------------------------------------------")
         print("Copie en cours ... ")
@@ -202,7 +202,8 @@ def parse_folder(working_folder, columns_supr, four_name, tarif_date, trigramme,
         minus = element.lower()
         if minus.startswith("socoda"):
             fichier_skusocoda = os.path.join(working_folder, element)
-    if fichier_skusocoda == None:
+    if fichier_skusocoda == None or fichier_skusocoda == "":
+        show_error_popup("Le fichier socoda est introuvable. ")
         raise ValueError("Le fichier socoda est introuvable. ")
 
     log_file = os.path.join(working_folder, "logfile.txt")
@@ -262,7 +263,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     SKUSOCODA = False
     nom = 'NOM'
     #-------------------------------------------TRAVAUX-------------------------------------
-    print("Etape 6 ")
+    print("Mise en place de l'onglet D3E ")
     dfs = pd.read_excel(fabdis_file, sheet_name=None)
 
     df_deee = dfs["04_REGLEMENTAIRE"]
@@ -284,7 +285,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     workbook.save(destfile)
     
     #-------------------------------------------TRAVAUX-------------------------------------
-    print("Etape 7 ")
+    print("Mise en place de l'onglet MEDIA  ")
     workbook = load_workbook(fabdis_file)
     sheet4 = workbook['03_MEDIA']
     photobd = 'photobd'
@@ -336,7 +337,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     workbook.save(destfile)
 
     #-------------------------------------------TRAVAUX-------------------------------------
-    print("Etape 7 ")
+    print("Mise en place de l'onglet F-GAZ")
     dfs = pd.read_excel(fabdis_file, sheet_name=None)
     df_fgaz = dfs["04_REGLEMENTAIRE"]
     df_fgaz = df_fgaz[df_fgaz["RTYP"] == "F-GAZ"]
@@ -359,7 +360,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     sheet = workbook['01_COMMERCE']
     sheet2 = workbook['DEEE']
 
-    print("Etape 8 ")
+    print("Création des bons noms d'images ")
 
     col_fiche = 4
     sheet3.cell(row = 1, column = col_fiche, value="FICHE")
