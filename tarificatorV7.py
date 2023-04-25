@@ -288,43 +288,43 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     print("Mise en place de l'onglet MEDIA  ")
     workbook = load_workbook(fabdis_file)
     sheet4 = workbook['03_MEDIA']
-    photobd = 'photobd'
-    photohd = 'photohd'
-    photohda = 'photohda'
-    photonorm = 'photo'
+    photobd = ['photobd', 'PHOTOBD']
+    photohd = ['photohd', 'PHOTOHD']
+    photohda = ['photohda', 'PHOTOHDA']
+    photonorm = ['photo', 'PHOTO']
     photoaprendre = ''
     status = False
     colonne2 = recuperer_ltre('TYPM', sheet4['A:Z'])
     for row in sheet4[colonne2]:
         if row.value == photobd:
-            photoaprendre = photobd
+            photoaprendre = row.value
             status = True
             break
         
     if status == False: 
         for row in sheet4[colonne2]:
-            if row.value == photohd:
-                photoaprendre = photohd
+            if row.value in photohd:
+                photoaprendre = row.value
                 status = True
                 break
     
     if status == False: 
         for row in sheet4[colonne2]:
-            if row.value == photohda:
-                photoaprendre = photohda
+            if row.value in photohda:
+                photoaprendre = row.value
                 status = True
                 break
             
     if status == False: 
         for row in sheet4[colonne2]:
-            if row.value == photonorm:
-                photoaprendre = photonorm
+            if row.value in photonorm:
+                photoaprendre = row.value
                 status = True
                 break
-            
+    print(photoaprendre)
     dfs = pd.read_excel(fabdis_file, sheet_name=None)
     df_media = dfs["03_MEDIA"]
-    df_media = df_media[df_media["TYPM"] == photoaprendre.lower()]
+    df_media = df_media[df_media["TYPM"] == photoaprendre]
     df_media = df_media.loc[:, columns_gard_media]
     df_media = df_media[df_media["NUM"] == 1]
     df_media["REFCIALE"] = df_media["REFCIALE"].astype(str)
