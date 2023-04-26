@@ -144,6 +144,7 @@ def camsoule(filename, col_name, onglet, destfile):
     lettre_refartcl = recuperer_ltre('REFCIALE', sheet)
 
     if lettre_refartcl == None:
+        show_error_popup("La colonne : REFCIALE, n'existe pas. ")
         raise ValueError("La colonne : REFCIALE, n'existe pas. ")
     colonne = sheet[str(lettre_refartcl)]
     max_row = sheet.max_row
