@@ -8,7 +8,6 @@ Created on Tue Dec 13 13:43:25 2022
 """
 import time
 import os
-import re
 import string
 import subprocess
 import pandas as pd
