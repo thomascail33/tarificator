@@ -14,6 +14,7 @@ import openpyxl
 from openpyxl import load_workbook
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 
 
 df = pd.read_excel('PrefixeSocoda (003).xlsx')
@@ -38,7 +39,11 @@ def get_trigram(fabricant, marque):
         return "Trigramme non trouvé"
     else:
         return trigram[0]
-
+    
+def show_error_popup(message):
+    root = tk.Tk()
+    root.withdraw()
+    messagebox.showerror("Error", message)
 
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
 
@@ -54,7 +59,11 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 def xnviewConversion(chemin_dossier):
     file_list = os.listdir(chemin_dossier)
     maxim = len(file_list)
-    tracer = 0
+    if maxim == 0:
+        show_error_popup("Aucune images n'a été trouvé.")
+        raise ValueError("Aucune images n'a été trouvé.")
+        
+    tracer = 1
     printProgressBar(0, maxim, prefix = 'Progress:', suffix = 'Complete', length = 50)
     for file in file_list:
         tracer = tracer +1
@@ -84,10 +93,10 @@ def mediator(wb, four_name, marq_name, trigramme):
     workbook = load_workbook(wb)
     sheet = workbook['03_MEDIA']
     z = 1 
-    photobd = 'PHOTOBD'
-    photohd = 'PHOTOHD'
-    photohda = 'PHOTOHDA'
-    photonorm = 'PHOTO' 
+    photobd = ['photobd', 'PHOTOBD']
+    photohd = ['photohd', 'PHOTOHD']
+    photohda = ['photohda', 'PHOTOHDA']
+    photonorm = ['photo', 'PHOTO']
     ext2 = '.pdf'
     ext = '.jpg'
     colonne = recuperer_ltre('URLT', sheet['A:Z'])
@@ -110,32 +119,32 @@ def mediator(wb, four_name, marq_name, trigramme):
     workbook.save(error_file)
     
     for row in sheet[colonne2]:
-        if row.value == photobd:
-            photoaprendre = photobd
+        if row.value in photobd:
+            photoaprendre = row.value
             status = True
             break
         
     if status == False: 
         for row in sheet[colonne2]:
-            if row.value == photohd:
-                photoaprendre = photohd
+            if row.value in photohd:
+                photoaprendre = row.value
                 status = True
                 break
     
     if status == False: 
         for row in sheet[colonne2]:
-            if row.value == photohda:
-                photoaprendre = photohda
+            if row.value in photohda:
+                photoaprendre = row.value
                 status = True
                 break
             
     if status == False: 
         for row in sheet[colonne6]:
-            if row.value == photonorm:
-                photoaprendre = photonorm
+            if row.value in photonorm:
+                photoaprendre = row.value
                 status = True
                 break
-     
+   
     max_row = sheet.max_row
     printProgressBar(0, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
     
@@ -144,7 +153,7 @@ def mediator(wb, four_name, marq_name, trigramme):
         tracer = row.row
         printProgressBar(tracer, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
         if row.value != 'URLT':
-            if sheet[colonne7 + str(tracer)].value == marq_name:
+            if sheet[colonne7 + str(tracer)].value.lower() == marq_name.lower():
                 if sheet[colonne2 + str(tracer)].value == photoaprendre:
                     if str(sheet[colonne3 + str(tracer)].value) == '1':
                         try:
@@ -174,13 +183,16 @@ def mediator(wb, four_name, marq_name, trigramme):
                             if url == None:
                                 z = z +1
     xnviewConversion(photo_folder)
-    # FICHE  
+    # FICHE 
+    
+    max_row = sheet.max_row
+    printProgressBar(0, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
     for row in sheet[colonne]:
         tracer = row.row
         printProgressBar(tracer, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
         if row.value != 'URLT':
-            if sheet[colonne7 + str(tracer)].value == marq_name:
-                if sheet[colonne2 + str(tracer)].value == 'FICHE':
+            if sheet[colonne7 + str(tracer)].value.lower() == marq_name.lower():
+                if sheet[colonne2 + str(tracer)].value.lower() == 'fiche':
                     if str(sheet[colonne3 + str(tracer)].value) == '1':
                         try:
                             sheet[colonne5 + str(tracer)].value[-4:] != None
