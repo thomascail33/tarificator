@@ -231,6 +231,7 @@ def create_work_file(fabdis_file, columns_supr, four_name, destfile, log_file, t
     df_commerce = dfs["01_COMMERCE"]
     df_commerce = df_commerce.loc[:, columns_gard]
     df_commerce = df_commerce.loc[~df_commerce['STA'].str.startswith('S')]
+    df_commerce = df_commerce[df_commerce["TARIF"] != 'NC']
     if four_name != "HIKVISION FRANCE":
         df_commerce["FAM1"] = pd.to_numeric(df_commerce["FAM1"], errors="coerce")
         df_commerce["FAM1"] = df_commerce["FAM1"].apply(lambda x: '{:03d}'.format(x) if not pd.isna(x) else '')
@@ -274,7 +275,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     try:
         df_deee.loc[~df_deee['RCOD'].str.startswith('P')]
     except Exception :
-        print("")
+        1 == 1
     else:
         df_deee = df_deee.loc[~df_deee['RCOD'].str.startswith('P')]
 
@@ -321,7 +322,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
                 photoaprendre = row.value
                 status = True
                 break
-    print(photoaprendre)
+            
     dfs = pd.read_excel(fabdis_file, sheet_name=None)
     df_media = dfs["03_MEDIA"]
     df_media = df_media[df_media["TYPM"] == photoaprendre]
@@ -380,10 +381,10 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         if row.value == nom:
             row.value = 'PHOTO'
 
-    print("Etape 9")
+    print("Correction des caractères à problème ")
 
     column9 = recuperer_ltre('LIBELLE240', sheet[rep])
-    column10 = recuperer_ltre('LIBELLE30', sheet[rep])
+    column10 = recuperer_ltre('LIBELLE30', sheet[rep])    
     for row in sheet[column9]:
         rowname = str(row.value)
         rowname = rowname.replace("œ","oe")
@@ -392,9 +393,11 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         rowname = str(row.value)
         rowname = rowname.replace("œ","oe")
         row.value = rowname
+        
+        
 
     print("----------------------------------------------------------")
-    print("Insertion des colonnes 'PHOTO', 'FICHE', D3E et 'SKUSOCODA' ...")
+    print("Insertion des colonnes 'PHOTO', 'FICHE', D3E, F-GAZ, UCH, SOCODA,   et 'SKUSOCODA' ...")
     print("----------------------------------------------------------")
     
     
@@ -426,7 +429,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     log_file.write("Les colonnes suivantes ont été inséré : 'PHOTO', 'FICHE', D3E, UCH, D3EC, D3EV, D3EU et 'SKUSOCODA'  \n ")
 
     
-    print("Etape 11")
+    print("Création des codes SOCODA")
     column12 = recuperer_ltre('SOCODA', sheet['A:AZ'])
     column13 = recuperer_ltre('REFARTICLE', sheet['A:AZ'])
     for row in sheet[column13]:
