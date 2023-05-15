@@ -20,6 +20,8 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
+fam_ban = ["DELTA DORE","HIKVISION FRANCE","FEILO SYLVANIA"]
+
 columns_gard = ["MARQUE", "REFCIALE", "REFARTICLE", "GTIN13", "LIBELLE30", "LIBELLE80",
                     "TARIF", "TARIFD", "QMV" ,"QMC" ,"QT" ,"UB" ,
                     "FAM1",	"FAM2", "FAM3", "MKT1", "MKT2", "MKT3", "LIBELLE240", "STA"]
@@ -37,6 +39,7 @@ mois = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 annees = ['2023', '2024', '2025', '2026']
 
 FINAL = ""
+
 
 df = pd.read_excel('PrefixeSocoda (003).xlsx')
 supplier_to_brands = {}
@@ -61,6 +64,15 @@ def get_trigram(fabricant, marque):
     else:
         return trigram[0]
 
+def get_remise(fabricant, marque, fam1, fam2):
+    df2 = pd.read_excel('rem_fam.xlsx')
+    rem = df2.loc[(df2['FABRICANT'] == fabricant) & (df2['MARQUE'] == marque) & (df2['FAMILLE1'] == fam1 ) & (df2['FAMILLE2'] == fam2 ), 'REM1'].values
+    if len(rem) == 0:
+        return "Remise non trouvé"
+    else:
+        return rem[0]
+
+    
 def get_compatible(fabricant, marque):
     comp = df.loc[(df['FABRICANT'] == fabricant) & (df['MARQUE'] == marque), 'COMPATIBLE'].values
     if len(comp) == 0:
@@ -181,7 +193,7 @@ def camsoule(filename, col_name, onglet, destfile):
 # Copie colle le dossier original pour ne pas corrompre le dossier original
 # Récupere par la meme occasion le FAB-DIS
 
-def parse_folder(working_folder, columns_supr, four_name, tarif_date, trigramme, file_path, origin_folder=None):
+def parse_folder(working_folder, columns_supr, four_name, tarif_date, trigramme, marq_name, file_path, origin_folder=None):
     start_time = time.perf_counter()
     if origin_folder:
         if not os.path.exists(origin_folder):
@@ -215,11 +227,11 @@ def parse_folder(working_folder, columns_supr, four_name, tarif_date, trigramme,
 
     log_file.write("FICHIER LOG TARIFICATOR \n\n\n")
     log_file.write("Commencement du script sur le fournisseur : " +four_name+ "\n")
-    create_work_file(fichier_fabdis, columns_supr, four_name, destfile, log_file, trigramme, fichier_skusocoda, start_time)
+    create_work_file(fichier_fabdis, columns_supr, four_name, destfile, log_file, trigramme, marq_name, fichier_skusocoda, start_time)
 
 
 # Création de mon fichier "Travail" qui copie colle mon Onglet 01-COMMERCE
-def create_work_file(fabdis_file, columns_supr, four_name, destfile, log_file, trigramme, fichier_skusocoda, start_time):
+def create_work_file(fabdis_file, columns_supr, four_name, destfile, log_file, trigramme, marq_name, fichier_skusocoda, start_time):
     print("----------------------------------------------------------")
     print("Fichier FAB-DIS : "+fabdis_file)
     print("----------------------------------------------------------")
@@ -232,7 +244,8 @@ def create_work_file(fabdis_file, columns_supr, four_name, destfile, log_file, t
     df_commerce = df_commerce.loc[:, columns_gard]
     df_commerce = df_commerce.loc[~df_commerce['STA'].str.startswith('S')]
     df_commerce = df_commerce[df_commerce["TARIF"] != 'NC']
-    if four_name != "HIKVISION FRANCE":
+    
+    if four_name not in fam_ban:
         df_commerce["FAM1"] = pd.to_numeric(df_commerce["FAM1"], errors="coerce")
         df_commerce["FAM1"] = df_commerce["FAM1"].apply(lambda x: '{:03d}'.format(x) if not pd.isna(x) else '')
     df_commerce["REFCIALE"] = df_commerce["REFCIALE"].astype(str)
@@ -254,16 +267,15 @@ def create_work_file(fabdis_file, columns_supr, four_name, destfile, log_file, t
     max_col_letters = string.ascii_uppercase[max_col-1]
     rep  = str(max_col_letters) + ":"+ str(max_row) 
     rep = "A:" + remove_numbers(rep)
-    format_work_file(destfile, columns_supr, log_file, fichier_skusocoda, trigramme, four_name, start_time, fabdis_file, rep)
+    format_work_file(destfile, columns_supr, log_file, fichier_skusocoda, trigramme, marq_name, four_name, start_time, fabdis_file, rep)
 
 # Suppression des colonnes inutile puis insertion des colonnes
 # PHOTO, FICHE, SKUSOCODA
 # Copie du SKUSOCODA dans l'onglet SKUSOCODA
 # Copie de tout l'onglet MEDIA
-def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigramme, four_name, start_time, fabdis_file, rep):
+def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigramme, marq_name, four_name, start_time, fabdis_file, rep):
     SKUSOCODA = False
     nom = 'NOM'
-    #-------------------------------------------TRAVAUX-------------------------------------
     print("Mise en place de l'onglet D3E ")
     dfs = pd.read_excel(fabdis_file, sheet_name=None)
 
@@ -284,8 +296,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     for r in dataframe_to_rows(df_deee, index=False, header=True):
         new_sheet.append(r)
     workbook.save(destfile)
-    
-    #-------------------------------------------TRAVAUX-------------------------------------
+
     print("Mise en place de l'onglet MEDIA  ")
     workbook = load_workbook(fabdis_file)
     sheet4 = workbook['03_MEDIA']
@@ -401,7 +412,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     print("----------------------------------------------------------")
     
     
-    sheet.insert_cols(idx = sheet.max_column+1, amount=11)
+    sheet.insert_cols(idx = sheet.max_column+1, amount=12)
     
     col_socoda = sheet.max_column+1
     sheet.cell(row = 1, column = col_socoda, value="SOCODA")
@@ -415,6 +426,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     sheet.cell(row = 1, column = col_fiche, value="FICHE")
     col_skusocoda = sheet.max_column+1
     sheet.cell(row = 1, column = col_skusocoda, value="SKUSOCODA")
+    col_rem = sheet.max_column+1
+    sheet.cell(row = 1, column = col_rem, value="REM")
     col_d3e = sheet.max_column+1
     sheet.cell(row = 1, column = col_d3e, value="D3E")
     col_d3ec = sheet.max_column+1
@@ -425,6 +438,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     sheet.cell(row = 1, column = col_d3eu, value="D3EU")
     col_deee = sheet2.max_column+1
     sheet2.cell(row = 1, column = col_deee, value="D3EC")
+    
 
     log_file.write("Les colonnes suivantes ont été inséré : 'PHOTO', 'FICHE', D3E, UCH, D3EC, D3EV, D3EU et 'SKUSOCODA'  \n ")
 
@@ -437,6 +451,22 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         if row.value != "" and str(row.value) != 'REFARTICLE':
             sheet[column12 + str(tracer)].value = str(trigramme) + str(row.value)
 
+    
+    print("Création des REMISES")
+    column14 = recuperer_ltre('FAM1', sheet['A:AZ'])
+    column15 = recuperer_ltre('FAM2', sheet['A:AZ'])
+    column16 = recuperer_ltre('REM', sheet['A:AZ'])
+    for row in sheet[column14]:
+        tracer = row.row
+        if row.value != "FAM1":
+            fam1 = row.value
+            fam2 = sheet[column15 + str(tracer)].value
+            if fam2 == None:
+                fam2 = "Null"
+            rem = get_remise(four_name, marq_name, fam1, fam2)
+            sheet[column16 + str(tracer)].value = rem
+   
+    
 
     #Mise en place de la D3E
 
@@ -685,7 +715,7 @@ if __name__ == '__main__':
              if comp == "NON":
                  show_error_popup("Ce tarif n'est pas compatible avec le logiciel !")
              if comp == "OUI":
-                 parse_folder(output_folder, columns_gard, fourn_name, tarif_date, trigramme, file_path, folder_path)
+                 parse_folder(output_folder, columns_gard, fourn_name, tarif_date, trigramme, marq_name, file_path, folder_path)
              
     def new_tarif():
         folder_entry.delete(0, tk.END)
