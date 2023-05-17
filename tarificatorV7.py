@@ -20,7 +20,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
-fam_ban = ["DELTA DORE","HIKVISION FRANCE","FEILO SYLVANIA"]
+fam_ban = ["DELTA DORE","HIKVISION FRANCE","FEILO SYLVANIA", "THERMOR"]
 
 columns_gard = ["MARQUE", "REFCIALE", "REFARTICLE", "GTIN13", "LIBELLE30", "LIBELLE80",
                     "TARIF", "TARIFD", "QMV" ,"QMC" ,"QT" ,"UB" ,
@@ -42,6 +42,7 @@ FINAL = ""
 
 
 df = pd.read_excel('PrefixeSocoda (003).xlsx')
+df2 = pd.read_excel('rem_fam.xlsx')
 supplier_to_brands = {}
 for supplier, brand in zip(df['FABRICANT'], df['MARQUE']):
     if supplier not in supplier_to_brands:
@@ -64,11 +65,11 @@ def get_trigram(fabricant, marque):
     else:
         return trigram[0]
 
-def get_remise(fabricant, marque, fam1, fam2):
-    df2 = pd.read_excel('rem_fam.xlsx')
-    rem = df2.loc[(df2['FABRICANT'] == fabricant) & (df2['MARQUE'] == marque) & (df2['FAMILLE1'] == fam1 ) & (df2['FAMILLE2'] == fam2 ), 'REM1'].values
+def get_remise(fabricant, marque, fam1, fam2, num_remise):
+    rem_name = "REM"+str(num_remise)
+    rem = df2.loc[(df2['FABRICANT'] == fabricant) & (df2['MARQUE'] == marque) & (df2['FAMILLE1'] == fam1 ) & (df2['FAMILLE2'] == fam2 ), rem_name].values
     if len(rem) == 0:
-        return "Remise non trouvé"
+        return ""
     else:
         return rem[0]
 
@@ -405,14 +406,11 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         rowname = rowname.replace("œ","oe")
         row.value = rowname
         
-        
-
     print("----------------------------------------------------------")
     print("Insertion des colonnes 'PHOTO', 'FICHE', D3E, F-GAZ, UCH, SOCODA,   et 'SKUSOCODA' ...")
-    print("----------------------------------------------------------")
+    print("----------------------------------------------------------") 
     
-    
-    sheet.insert_cols(idx = sheet.max_column+1, amount=12)
+    sheet.insert_cols(idx = sheet.max_column+1, amount=14)
     
     col_socoda = sheet.max_column+1
     sheet.cell(row = 1, column = col_socoda, value="SOCODA")
@@ -428,6 +426,10 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     sheet.cell(row = 1, column = col_skusocoda, value="SKUSOCODA")
     col_rem = sheet.max_column+1
     sheet.cell(row = 1, column = col_rem, value="REM")
+    col_rem2 = sheet.max_column+1
+    sheet.cell(row = 1, column = col_rem2, value="REM2")
+    col_rem3 = sheet.max_column+1
+    sheet.cell(row = 1, column = col_rem3, value="REM3")
     col_d3e = sheet.max_column+1
     sheet.cell(row = 1, column = col_d3e, value="D3E")
     col_d3ec = sheet.max_column+1
@@ -456,6 +458,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     column14 = recuperer_ltre('FAM1', sheet['A:AZ'])
     column15 = recuperer_ltre('FAM2', sheet['A:AZ'])
     column16 = recuperer_ltre('REM', sheet['A:AZ'])
+    column17 = recuperer_ltre('REM2', sheet['A:AZ'])
+    column18 = recuperer_ltre('REM3', sheet['A:AZ'])
     for row in sheet[column14]:
         tracer = row.row
         if row.value != "FAM1":
@@ -463,8 +467,28 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
             fam2 = sheet[column15 + str(tracer)].value
             if fam2 == None:
                 fam2 = "Null"
-            rem = get_remise(four_name, marq_name, fam1, fam2)
+            rem = get_remise(four_name, marq_name, fam1, fam2,1)
             sheet[column16 + str(tracer)].value = rem
+            
+    for row in sheet[column14]:
+        tracer = row.row
+        if row.value != "FAM1":
+            fam1 = row.value
+            fam2 = sheet[column17 + str(tracer)].value
+            if fam2 == None:
+                fam2 = "Null"
+            rem = get_remise(four_name, marq_name, fam1, fam2,2)
+            sheet[column17 + str(tracer)].value = rem
+            
+    for row in sheet[column14]:
+        tracer = row.row
+        if row.value != "FAM1":
+            fam1 = row.value
+            fam2 = sheet[column15 + str(tracer)].value
+            if fam2 == None:
+                fam2 = "Null"
+            rem = get_remise(four_name, marq_name, fam1, fam2,3)
+            sheet[column18 + str(tracer)].value = rem
    
     
 
