@@ -315,7 +315,7 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     status = False
     colonne2 = recuperer_ltre('TYPM', sheet4['A:Z'])
     for row in sheet4[colonne2]:
-        if row.value == photobd:
+        if row.value in photobd:
             photoaprendre = row.value
             status = True
             break
@@ -340,7 +340,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
                 photoaprendre = row.value
                 status = True
                 break
-            
+    
+    
     dfs = pd.read_excel(fabdis_file, sheet_name=None)
     df_media = dfs["03_MEDIA"]
     df_media = df_media[df_media["TYPM"] == photoaprendre]
@@ -668,7 +669,21 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     log_file.write("Recherche V des D3EU terminé ! \n ")
     log_file.write("______________________________________________________________________________ \n ")
     log_file.close()
-
+    
+    # detection de F-GAZ 
+    print("détection F-GAZ")
+    workbook = load_workbook(fabdis_file)
+    fgaz = ["F-GAZ", "f-gaz"]
+    sheet5 = workbook['04_REGLEMENTAIRE']
+    colonne20 = recuperer_ltre('RTYP', sheet5['A:Z'])
+    
+    for row in sheet5[colonne20]:
+        if row.value in fgaz:
+            show_error_popup('ATTENTION! CE FICHIER CONTIENT DU F-GAZ')
+            break
+    workbook.save(fabdis_file)
+    
+    
     tarif_date = annee_selectionnee.get() + mois_selectionne.get()
     FINAL = os.path.join(os.path.dirname(destfile), "Tarif_"+four_name+"_"+tarif_date+".xlsx")
     workbook = openpyxl.Workbook()
