@@ -87,7 +87,14 @@ def xnviewConversion(chemin_dossier):
             
             # Sauvegarder la nouvelle image
             new_image.save(file_path)
-            
+def delete0(photo_folder):
+    image_list = os.listdir(photo_folder)
+    for image in image_list:
+        taille = os.path.getsize(image)
+        if taille == 0 : 
+            print("AYOOOOOOOOOOOOOOOOOO")
+            #os.remove(filedestination)
+    
 def mediator(wb, four_name, marq_name, trigramme):
     start_time = time.perf_counter()
     workbook = load_workbook(wb)
@@ -165,6 +172,7 @@ def mediator(wb, four_name, marq_name, trigramme):
                                 sheet[colonne5 + str(tracer)].value[-4:] != None
                             except Exception :
                                 nt = 1
+                                print("AYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
                             ref = sheet[colonne4 + str(tracer)].value
                             photo_new_name = trigramme +'_'+ str(ref) + ext
                             photo_new_name = photo_new_name.replace("\\", "")
@@ -172,7 +180,9 @@ def mediator(wb, four_name, marq_name, trigramme):
                             destfile = photo_folder
                             filedestination = os.path.join(destfile, photo_new_name)
                             url = row.value
+                            
                             if not os.path.exists(filedestination):
+                                
                                 if url != None:
                                     try:
                                         response = requests.get(url)
@@ -187,7 +197,11 @@ def mediator(wb, four_name, marq_name, trigramme):
                                             error_df = error_df.append({'REFCIALE': ref, 'URL': url, 'TYPE': 'PHOTO'}, ignore_index=True)
                                 if url == None:
                                     z = z +1
+                                    
+    delete0(photo_folder)
+                         
     xnviewConversion(photo_folder)
+    
     # FICHE 
     
     max_row = sheet.max_row

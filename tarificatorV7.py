@@ -20,9 +20,10 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
-fam_ban = ["DELTA DORE","HIKVISION FRANCE","FEILO SYLVANIA", "THERMOR"]
+fam_ban = ["DELTA DORE","HIKVISION FRANCE","FEILO SYLVANIA", "THERMOR", "GEWISS", "THEBEN", "APPLIMO",
+           "AIRELEC", "INTUIS", "NOIROT", "MULLER INTUITIV", "MICHAUD", "Eaton"]
 
-columns_gard = ["MARQUE", "REFCIALE", "REFARTICLE", "GTIN13", "LIBELLE30", "LIBELLE80",
+columns_gard = ["MARQUE", "GAMME", "REFCIALE", "REFARTICLE", "GTIN13", "LIBELLE30", "LIBELLE80",
                     "TARIF", "TARIFD", "QMV" ,"QMC" ,"QT" ,"UB" ,
                     "FAM1",	"FAM2", "FAM3", "MKT1", "MKT2", "MKT3", "LIBELLE240", "STA"]
 
@@ -250,9 +251,12 @@ def create_work_file(fabdis_file, columns_supr, four_name, destfile, log_file, t
         df_commerce["FAM1"] = pd.to_numeric(df_commerce["FAM1"], errors="coerce")
         df_commerce["FAM1"] = df_commerce["FAM1"].apply(lambda x: '{:03d}'.format(x) if not pd.isna(x) else '')
     df_commerce["REFCIALE"] = df_commerce["REFCIALE"].astype(str)
-    df_commerce["REFCIALE"] = df_commerce["REFCIALE"].str.zfill(6)
     df_commerce["REFARTICLE"] = df_commerce["REFARTICLE"].astype(str)
-    df_commerce["REFARTICLE"] = df_commerce["REFARTICLE"].str.zfill(6)
+    if four_name != "MICHAUD":
+        df_commerce["REFCIALE"] = df_commerce["REFCIALE"].str.zfill(6)
+        df_commerce["REFARTICLE"] = df_commerce["REFARTICLE"].str.zfill(6)
+    
+    
     
     if four_name == "ATLANTIC CLIMATISATION & VENTILATION":
         df_commerce = df_commerce.loc[~df_commerce['MKT1'].str.startswith('CV4')]
@@ -282,9 +286,11 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
 
     df_deee = dfs["04_REGLEMENTAIRE"]
     df_deee = df_deee[df_deee["RTYP"] == 'CONTRIB']
+    df_deee = df_deee[df_deee["RNAT"] == 'DEEE']
     df_deee = df_deee.loc[:, columns_gard_deee]
     df_deee["REFCIALE"] = df_deee["REFCIALE"].astype(str)
-    df_deee["REFCIALE"] = df_deee["REFCIALE"].str.zfill(6)
+    if four_name != "MICHAUD":
+        df_deee["REFCIALE"] = df_deee["REFCIALE"].str.zfill(6)
     try:
         df_deee.loc[~df_deee['RCOD'].str.startswith('P')]
     except Exception :
@@ -341,7 +347,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     df_media = df_media.loc[:, columns_gard_media]
     df_media = df_media[df_media["NUM"] == 1]
     df_media["REFCIALE"] = df_media["REFCIALE"].astype(str)
-    df_media["REFCIALE"] = df_media["REFCIALE"].str.zfill(6)
+    if four_name != "MICHAUD":
+        df_media["REFCIALE"] = df_media["REFCIALE"].str.zfill(6)
 
     workbook = openpyxl.load_workbook(destfile)
     new_sheet = workbook.create_sheet("03_MEDIA")
@@ -357,7 +364,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     df_fgaz = df_fgaz[df_fgaz["RTEXTE"] == "SOUMIS ADC"]
     df_fgaz = df_fgaz.loc[:, columns_gard_fgaz]
     df_fgaz["REFCIALE"] = df_fgaz["REFCIALE"].astype(str)
-    df_fgaz["REFCIALE"] = df_fgaz["REFCIALE"].str.zfill(6)
+    if four_name != "MICHAUD":
+        df_fgaz["REFCIALE"] = df_fgaz["REFCIALE"].str.zfill(6)
 
     workbook = openpyxl.load_workbook(destfile)
     new_sheet = workbook.create_sheet("F-GAZ")
@@ -629,7 +637,8 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         df_skusocoda = dfs['S1_SOCODA_NOMENCLATURE']
         df_skusocoda = df_skusocoda.loc[:, ["REFCIALE", "SKUSOCODA"]]
         df_skusocoda["REFCIALE"] = df_skusocoda["REFCIALE"].astype(str)
-        df_skusocoda["REFCIALE"] = df_skusocoda["REFCIALE"].str.zfill(6)
+        if four_name != "MICHAUD":
+            df_skusocoda["REFCIALE"] = df_skusocoda["REFCIALE"].str.zfill(6)
         SKUSOCODA = True
         workbook = openpyxl.load_workbook(destfile)
         new_sheet = workbook.create_sheet("SKUSOCODA")
