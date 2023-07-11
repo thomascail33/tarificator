@@ -198,9 +198,9 @@ def mediator(wb, four_name, marq_name, trigramme):
                                 if url == None:
                                     z = z +1
                                     
-    #delete0(photo_folder)
+    delete0(photo_folder)
                          
-   # xnviewConversion(photo_folder)
+    xnviewConversion(photo_folder)
     
     # FICHE 
     
@@ -316,7 +316,7 @@ def quit_app():
     root.destroy()
     
 root = tk.Tk()
-root.title("MEDIATOR 1.0.1")
+root.title("MEDIATOR23.07.11")
 root.geometry("450x160")
 
 texte_param = tk.Label(root, text="Initialisation de Mediator")

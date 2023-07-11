@@ -837,7 +837,7 @@ if __name__ == '__main__':
         root.destroy()
 
     root = tk.Tk()
-    root.title("TARIFICATOR 23.07")
+    root.title("TARIFICATOR 23.07.11")
     root.geometry("560x220")
 
     mois_selectionne = tk.StringVar(root)
