@@ -90,10 +90,10 @@ def xnviewConversion(chemin_dossier):
 def delete0(photo_folder):
     image_list = os.listdir(photo_folder)
     for image in image_list:
-        taille = os.path.getsize(image)
+        photo_path = os.path.join(photo_folder, image)
+        taille = os.path.getsize(photo_path)
         if taille == 0 : 
-            print("AYOOOOOOOOOOOOOOOOOO")
-            #os.remove(filedestination)
+            os.remove(photo_path)
     
 def mediator(wb, four_name, marq_name, trigramme):
     start_time = time.perf_counter()
@@ -198,9 +198,9 @@ def mediator(wb, four_name, marq_name, trigramme):
                                 if url == None:
                                     z = z +1
                                     
-    delete0(photo_folder)
+    #delete0(photo_folder)
                          
-    xnviewConversion(photo_folder)
+   # xnviewConversion(photo_folder)
     
     # FICHE 
     
