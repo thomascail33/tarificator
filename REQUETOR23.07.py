@@ -38,6 +38,13 @@ def get_trigram(fabricant, marque):
         return "Trigramme non trouvé"
     else:
         return trigram[0]
+
+def get_code_fou(fabricant, marque):
+    code_fou = df.loc[(df['FABRICANT'] == fabricant) & (df['MARQUE'] == marque), 'CODEFOU'].values
+    if len(code_fou) == 0:
+        return "Code fournisseur non trouvé"
+    else:
+        return code_fou
     
 def show_error_popup(message):
     root = tk.Tk()
@@ -60,22 +67,66 @@ def create_request(wb, four_name, marq_name, trigramme):
     start_time = time.perf_counter()
     workbook = load_workbook(wb)
     sheet = workbook['01_COMMERCE']
-    z = 1 
-    sheet.insert_cols(idx = sheet.max_column+1, amount=1)
+    html = ""
     
-    coltest = sheet.max_column+1
-    sheet.cell(row = 1, column = coltest, value="test")
+    code_fou = str(get_code_fou(four_name, marq_name))
+    code_fou = code_fou.replace("[", "")
+    code_fou = code_fou.replace("]", "")
+    if len(code_fou) < 5 :
+        code_fou = "0" + str(code_fou)
+        print(code_fou)
+        
+    socoda = ""
+    refciale = ""
+    gtin13 = ""
+    fab = four_name
+    marq = marq_name
+    gamme =""
+    libelle30 = ""
+    libelle240 = ""    
+
+    colonne7 = recuperer_ltre('REQUEST', sheet['A:AJ'])
+    print(colonne7)
+    if colonne7 == None:
+        sheet.insert_cols(idx = sheet.max_column+1, amount=1)
+        col_request = sheet.max_column
+        sheet.cell(row = 1, column = col_request, value="REQUEST")
+        
+    colonne7 = recuperer_ltre('REQUEST', sheet['A:AJ'])
+    colonne3 = recuperer_ltre('LIBELLE30', sheet['A:Z'])
+    colonne4 = recuperer_ltre('LIBELLE240', sheet['A:Z'])
+    colonne5 = recuperer_ltre('GAMME', sheet['A:Z'])
+    colonne6 = recuperer_ltre('REFCIALE', sheet['A:Z'])
+    colonne8 = recuperer_ltre('GTIN13', sheet['A:Z'])
+    
+    for row in sheet[colonne6]:
+        tracer = row.row
+        refciale = sheet[colonne6 + str(tracer)].value
+        libelle30 = sheet[colonne3 + str(tracer)].value
+        libelle240 = sheet[colonne4 + str(tracer)].value
+        libelle240 = libelle240.replace(";","</li><li>")
+        libelle240 = libelle240.replace(".","</li><li>")
+        libelle240 = libelle240.replace("+","</li><li>")
+        libelle240 = libelle240.replace("-","</li><li>")
+        libelle240 = libelle240.replace(",","</li><li>")
+        libelle240 = libelle240.replace("'"," ")
+        gamme = sheet[colonne5 + str(tracer)].value
+        gtin13 = sheet[colonne8 + str(tracer)].value
+        html = "<p><b> Code fournisseur : "+str(code_fou)+"</b><br> Reférence commerciale : "+str(refciale)+"<br>Nom produit : "+str(libelle30)+"<br>Marque : "+str(marq)+"<br>Gamme : "+str(gamme)+"<br>EAN : "+str(gtin13)+"</p><p><b>Caractéristiques :</b><br/><ul><li>"+str(libelle240)+"</li></ul></p>"
+        update = "UPDATE ta_corcp SET TA_DESCRI = '"+str(html)+"' WHERE ta_cofou = '"+str(code_fou)+"' AND ta_tagecom <> 'O' AND TA_DESCRI = '' AND TA_SOCODA = '"+str(socoda)+"';"
+        if sheet[colonne7 + str(tracer)].value != "REQUEST":
+            sheet[colonne7 + str(tracer)].value = update
+    
+    
+    
+    
     workbook.save(wb)
-    
-    
-    
-    
     end_time = time.perf_counter()
     execution_time = end_time - start_time
     print("----------------------------------------------------------")
     print("Temps d'exécution : {:.2f} seconds".format(execution_time))
     print("----------------------------------------------------------") 
-    root.destroy()
+    #root.destroy()
 
 def recuperer_ltre(valeur, plage):
     for row in plage:
