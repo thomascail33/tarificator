@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 """
 Spyder Editor
 
@@ -25,7 +25,7 @@ fam_ban = ["DELTA DORE","HIKVISION FRANCE","FEILO SYLVANIA", "THERMOR", "GEWISS"
 
 columns_gard = ["MARQUE", "GAMME", "REFCIALE", "REFARTICLE", "GTIN13", "LIBELLE30", "LIBELLE80",
                     "TARIF", "TARIFD", "QMV" ,"QMC" ,"QT" ,"UB" ,
-                    "FAM1",	"FAM2", "FAM3", "MKT1", "MKT2", "MKT3", "LIBELLE240", "STA"]
+                    "FAM1",	"FAM2", "FAM3", "MKT1", "MKT2", "LIBELLE240", "STA"]
 
 columns_gard_deee = ["REFCIALE", "RNBR", "RVAL", "RNUM", "RCOD"]
 
@@ -360,7 +360,6 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
         new_sheet.append(r)
     workbook.save(destfile)
 
-    #-------------------------------------------TRAVAUX-------------------------------------
     print("Mise en place de l'onglet F-GAZ")
     dfs = pd.read_excel(fabdis_file, sheet_name=None)
     df_fgaz = dfs["04_REGLEMENTAIRE"]
@@ -378,7 +377,6 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
 
     workbook.save(destfile)
 
-    #-------------------------------------------TRAVAUX-------------------------------------
     workbook = load_workbook(destfile)
 
     sheet3 = workbook['03_MEDIA']
@@ -386,7 +384,6 @@ def format_work_file(destfile, columns_gard, log_file, fichier_skusocoda, trigra
     sheet2 = workbook['DEEE']
     
     
-
     print("Création des bons noms d'images ")
 
     col_fiche = 4

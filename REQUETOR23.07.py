@@ -5,10 +5,7 @@ Created on Tue Jul 11 15:18:40 2023
 @author: cail
 """
 
-import requests
-import os
 import time
-from PIL import Image
 import pandas as pd
 import openpyxl
 from openpyxl import load_workbook
@@ -67,16 +64,16 @@ def create_request(wb, four_name, marq_name, trigramme):
     start_time = time.perf_counter()
     workbook = load_workbook(wb)
     sheet = workbook['01_COMMERCE']
-    html = ""
-    
+    sheet2 = workbook.create_sheet(title="requete")
+    sheet2["A1"] = "REQ DESC"
+    sheet2["B1"] = "REQ PHOTO"
     code_fou = str(get_code_fou(four_name, marq_name))
     code_fou = code_fou.replace("[", "")
     code_fou = code_fou.replace("]", "")
     if len(code_fou) < 5 :
         code_fou = "0" + str(code_fou)
         print(code_fou)
-        
-    socoda = ""
+
     refciale = ""
     gtin13 = ""
     fab = four_name
@@ -85,48 +82,56 @@ def create_request(wb, four_name, marq_name, trigramme):
     libelle30 = ""
     libelle240 = ""    
 
-    colonne7 = recuperer_ltre('REQUEST', sheet['A:AJ'])
-    print(colonne7)
-    if colonne7 == None:
-        sheet.insert_cols(idx = sheet.max_column+1, amount=1)
-        col_request = sheet.max_column
-        sheet.cell(row = 1, column = col_request, value="REQUEST")
-        
-    colonne7 = recuperer_ltre('REQUEST', sheet['A:AJ'])
+    colonne7 = recuperer_ltre('REQ DESC', sheet2['A:Z'])
+    colonne9 = recuperer_ltre('REQ PHOTO', sheet2['A:Z'])
     colonne3 = recuperer_ltre('LIBELLE30', sheet['A:Z'])
     colonne4 = recuperer_ltre('LIBELLE240', sheet['A:Z'])
+    colonne12 = recuperer_ltre('LIBELLE80', sheet['A:Z'])
     colonne5 = recuperer_ltre('GAMME', sheet['A:Z'])
     colonne6 = recuperer_ltre('REFCIALE', sheet['A:Z'])
     colonne8 = recuperer_ltre('GTIN13', sheet['A:Z'])
+    colonne10 = recuperer_ltre('SOCODA', sheet['A:Z'])
+    colonne11 = recuperer_ltre('PHOTO', sheet['A:Z'])
+    
     
     for row in sheet[colonne6]:
         tracer = row.row
         refciale = sheet[colonne6 + str(tracer)].value
         libelle30 = sheet[colonne3 + str(tracer)].value
+        socoda = sheet[colonne10 + str(tracer)].value
+        photo = sheet[colonne11 + str(tracer)].value
         libelle240 = sheet[colonne4 + str(tracer)].value
+        
+        if libelle240 == "":
+            libelle240 = sheet[colonne12 + str(tracer)].value
+        
         libelle240 = libelle240.replace(";","</li><li>")
         libelle240 = libelle240.replace(".","</li><li>")
         libelle240 = libelle240.replace("+","</li><li>")
         libelle240 = libelle240.replace("-","</li><li>")
         libelle240 = libelle240.replace(",","</li><li>")
-        libelle240 = libelle240.replace("'"," ")
+        libelle240 = libelle240.replace("'","")
+        libelle30 = libelle30.replace("'"," ")
+
         gamme = sheet[colonne5 + str(tracer)].value
         gtin13 = sheet[colonne8 + str(tracer)].value
-        html = "<p><b> Code fournisseur : "+str(code_fou)+"</b><br> Reférence commerciale : "+str(refciale)+"<br>Nom produit : "+str(libelle30)+"<br>Marque : "+str(marq)+"<br>Gamme : "+str(gamme)+"<br>EAN : "+str(gtin13)+"</p><p><b>Caractéristiques :</b><br/><ul><li>"+str(libelle240)+"</li></ul></p>"
-        update = "UPDATE ta_corcp SET TA_DESCRI = '"+str(html)+"' WHERE ta_cofou = '"+str(code_fou)+"' AND ta_tagecom <> 'O' AND TA_DESCRI = '' AND TA_SOCODA = '"+str(socoda)+"';"
-        if sheet[colonne7 + str(tracer)].value != "REQUEST":
-            sheet[colonne7 + str(tracer)].value = update
+        htmldesc = "<p><b> Code fournisseur : "+str(code_fou)+"</b><br> Reférence commerciale : "+str(refciale)+"<br> Fournisseur : "+str(fab)+"<br>Nom produit : "+str(libelle30)+"<br>Marque : "+str(marq)+"<br>Gamme : "+str(gamme)+"<br>EAN : "+str(gtin13)+"</p><p><b>Caractéristiques :</b><br/><ul><li>"+str(libelle240)+"</li></ul></p>"
+        updatephoto = "UPDATE TA_CORCP SET ta_descri = CASE WHEN RIGHT(TRIM(ta_descri), 4) = '<br>' THEN LEFT(TRIM(ta_descri), LENGTH(TRIM(ta_descri)) - 4) ELSE CONCAT(TRIM(ta_descri), '<br>') END, ta_images = '"+str(photo)+"' , ta_photo = '"+str(photo)+"' WHERE ta_cofou = '"+str(code_fou)+"' AND ta_socoda = '"+str(socoda)+"';"
+        update = "UPDATE ta_corcp SET TA_DESCRI = '"+str(htmldesc)+"' WHERE ta_cofou = '"+str(code_fou)+"' AND ta_socoda = '"+str(socoda)+"';"
+        if sheet2[colonne7 + str(tracer)].value != "REQ DESC":
+            sheet2[colonne7 + str(tracer)].value = htmldesc
+        if sheet2[colonne9 + str(tracer)].value != "REQ PHOTO":
+            sheet2[colonne9 + str(tracer)].value = updatephoto
     
     
-    
-    
-    workbook.save(wb)
+    outputfolder = wb.replace(".xlsx","_req.xlsx")
+    workbook.save(outputfolder)
     end_time = time.perf_counter()
     execution_time = end_time - start_time
     print("----------------------------------------------------------")
     print("Temps d'exécution : {:.2f} seconds".format(execution_time))
     print("----------------------------------------------------------") 
-    #root.destroy()
+    root.destroy()
 
 def recuperer_ltre(valeur, plage):
     for row in plage:

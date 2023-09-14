@@ -151,7 +151,8 @@ def mediator(wb, four_name, marq_name, trigramme):
                 photoaprendre = row.value
                 status = True
                 break
-   
+    
+    photoaprendre = 'PHOTOHD'
     max_row = sheet.max_row
     printProgressBar(0, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
     
@@ -160,19 +161,23 @@ def mediator(wb, four_name, marq_name, trigramme):
         tracer = row.row
         printProgressBar(tracer, max_row, prefix = 'Progress:', suffix = 'Complete', length = 50)
         if row.value != 'URLT':
+
             try: 
                 sheet[colonne7 + str(tracer)].value.lower() in marq_name.lower()
             except Exception :
                 nt = 1
+                print(sheet[colonne7 + str(tracer)].value.lower())
+                print(marq_name.lower())
             else: 
                 if sheet[colonne7 + str(tracer)].value.lower() in marq_name.lower():
+    
                     if sheet[colonne2 + str(tracer)].value == photoaprendre:
                         if str(sheet[colonne3 + str(tracer)].value) == '1':
+                            
                             try:
                                 sheet[colonne5 + str(tracer)].value[-4:] != None
                             except Exception :
                                 nt = 1
-                                print("AYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
                             ref = sheet[colonne4 + str(tracer)].value
                             photo_new_name = trigramme +'_'+ str(ref) + ext
                             photo_new_name = photo_new_name.replace("\\", "")
